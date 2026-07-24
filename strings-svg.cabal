@@ -9,10 +9,10 @@ author: Tony Day
 maintainer: tonyday567@gmail.com
 homepage: https://github.com/tonyday567/strings-svg#readme
 bug-reports: https://github.com/tonyday567/strings-svg/issues
-synopsis: String-diagram SVG rendering for circuits-int via chart-svg
+synopsis: String-diagram SVG rendering for circuits-poly via chart-svg
 description:
   Layout and chart-svg rendering for the compact-closed string-diagram
-  DSL in @circuits-int@ ('Circuit.Int.StringDiagram').  Produces dark
+  DSL in @circuits-poly@ ('Circuit.Poly.StringDiagram').  Produces dark
   house-palette equality diagrams (yanking, sliding, braid, interchange,
   star/Arden).
 
@@ -80,7 +80,7 @@ library
     base >=4.18 && <5,
     bytestring >=0.11 && <0.13,
     chart-svg >=0.8 && <0.9,
-    circuits-int >=0.1 && <0.2,
+    circuits-poly >=0.1 && <0.2,
     directory >=1.3 && <1.4,
     filepath >=1.4 && <1.6,
     optics-core >=0.4 && <0.5,
@@ -106,5 +106,5 @@ test-suite spec
   build-depends:
     base >=4.18 && <5,
     chart-svg >=0.8 && <0.9,
-    circuits-int >=0.1 && <0.2,
+    circuits-poly >=0.1 && <0.2,
     strings-svg,

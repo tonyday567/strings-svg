@@ -2,14 +2,14 @@
 --
 -- Pipeline:
 --
--- 1. Build a typed 'Circuit.Int.StringDiagram.Diagram' (or an untyped 'SDiagram').
+-- 1. Build a typed 'Circuit.Poly.StringDiagram.Diagram' (or an untyped 'SDiagram').
 -- 2. Forget types with 'skeleton' (if needed).
 -- 3. 'layoutSDiagram' → 'Layout' (ports + bounds + 'ChartTree').
 -- 4. 'renderLayout' / 'renderSDiagram' → 'ChartOptions'.
 -- 5. 'writeChartOptions' → SVG file.
 module Strings.Svg
-  ( -- * Re-exports from circuits-int
-    module Circuit.Int.StringDiagram,
+  ( -- * Re-exports from circuits-poly
+    module Circuit.Poly.StringDiagram,
 
     -- * Layout
     Layout (..),
@@ -36,7 +36,7 @@ module Strings.Svg
   )
 where
 
-import Circuit.Int.StringDiagram
+import Circuit.Poly.StringDiagram
 import Strings.Svg.Examples
 import Strings.Svg.Layout
 import Strings.Svg.Palette

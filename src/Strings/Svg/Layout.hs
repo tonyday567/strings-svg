@@ -27,7 +27,7 @@ module Strings.Svg.Layout
 where
 
 import Chart
-import Circuit.Int.StringDiagram (SDiagram (..))
+import Circuit.Poly.StringDiagram (SDiagram (..))
 import Data.Text (pack)
 import Optics.Core
 import Strings.Svg.Palette

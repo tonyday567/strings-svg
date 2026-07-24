@@ -20,7 +20,7 @@ module Strings.Svg.Examples
 where
 
 import Chart
-import Circuit.Int.StringDiagram (SDiagram (..), boxLabelled, skeleton)
+import Circuit.Poly.StringDiagram (SDiagram (..), boxLabelled, skeleton)
 import Circuit.Poly qualified as Poly
 import Data.Text (pack)
 import Optics.Core

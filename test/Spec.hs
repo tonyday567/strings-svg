@@ -1,7 +1,7 @@
 -- | Structural oracles for string-diagram layout.
 module Main (main) where
 
-import Circuit.Int.StringDiagram
+import Circuit.Poly.StringDiagram
   ( SDiagram (..),
     beside,
     boxLabelled,

@@ -13,7 +13,7 @@ module Strings.Svg.Render
 where
 
 import Chart
-import Circuit.Int.StringDiagram (Diagram, SDiagram, skeleton)
+import Circuit.Poly.StringDiagram (Diagram, SDiagram, skeleton)
 import Data.ByteString (ByteString)
 import Optics.Core
 import Strings.Svg.Layout
