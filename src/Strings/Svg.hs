@@ -1,0 +1,43 @@
+-- | String-diagram SVG rendering for @circuits-int@ via @chart-svg@.
+--
+-- Pipeline:
+--
+-- 1. Build a typed 'Circuit.Int.StringDiagram.Diagram' (or an untyped 'SDiagram').
+-- 2. Forget types with 'skeleton' (if needed).
+-- 3. 'layoutSDiagram' → 'Layout' (ports + bounds + 'ChartTree').
+-- 4. 'renderLayout' / 'renderSDiagram' → 'ChartOptions'.
+-- 5. 'writeChartOptions' → SVG file.
+module Strings.Svg
+  ( -- * Re-exports from circuits-int
+    module Circuit.Int.StringDiagram,
+
+    -- * Layout
+    Layout (..),
+    layoutSDiagram,
+    layoutWidth,
+    layoutHeight,
+    countCharts,
+    countLines,
+    countRects,
+    countPaths,
+
+    -- * Render
+    renderLayout,
+    renderSDiagram,
+    renderDiagram,
+    equalityRow,
+    withBackground,
+
+    -- * Palette
+    module Strings.Svg.Palette,
+
+    -- * Examples
+    module Strings.Svg.Examples,
+  )
+where
+
+import Circuit.Int.StringDiagram
+import Strings.Svg.Examples
+import Strings.Svg.Layout
+import Strings.Svg.Palette
+import Strings.Svg.Render
