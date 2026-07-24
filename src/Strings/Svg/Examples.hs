@@ -10,6 +10,10 @@ module Strings.Svg.Examples
     braidInverseExample,
     tensorInterchangeExample,
     starArdenExample,
+    knotBraid3Example,
+    knotCircleExample,
+    knotTraceExample,
+    knotTangleExample,
     allExamples,
     writeAllExamples,
   )
@@ -220,6 +224,56 @@ starArdenExample =
         layoutSDiagram (SThenD (boxF "a") (boxF "a*"))
 
 --------------------------------------------------------------------------------
+-- 8. Three-strand braid
+--------------------------------------------------------------------------------
+
+-- | Braid on three strands: σ1 then σ2.
+knotBraid3Example :: ChartOptions
+knotBraid3Example =
+  renderLayout $
+    layoutSDiagram $
+      SThenD
+        (SBeside SSwap SWire)
+        (SBeside SWire SSwap)
+
+--------------------------------------------------------------------------------
+-- 9. Closed loop: cap then cup
+--------------------------------------------------------------------------------
+
+-- | A single wire that leaves the unit, travels right, and returns to the unit.
+-- In the geometric picture this is a circle.
+knotCircleExample :: ChartOptions
+knotCircleExample =
+  renderLayout $
+    layoutSDiagram (SThenD SBend' SBend)
+
+--------------------------------------------------------------------------------
+-- 10. Trace loop around a box
+--------------------------------------------------------------------------------
+
+-- | A feedback loop with a box inside: trace of a one-wire morphism.
+knotTraceExample :: ChartOptions
+knotTraceExample =
+  renderLayout $
+    layoutSDiagram $
+      SThenD
+        SBend'
+        (SThenD (SBeside (boxF "f") SWire) SBend)
+
+--------------------------------------------------------------------------------
+-- 11. Tangle: swap, cap, cup
+--------------------------------------------------------------------------------
+
+-- | A small tangle: two wires cross, one bends back and forth.
+knotTangleExample :: ChartOptions
+knotTangleExample =
+  renderLayout $
+    layoutSDiagram $
+      SThenD
+        (SBeside SSwap SBend')
+        (SBeside SBend SSwap)
+
+--------------------------------------------------------------------------------
 -- gallery
 --------------------------------------------------------------------------------
 
@@ -232,7 +286,11 @@ allExamples =
     ("trace-sliding.svg", traceSlidingExample),
     ("braid-inverse.svg", braidInverseExample),
     ("tensor-interchange.svg", tensorInterchangeExample),
-    ("star-arden.svg", starArdenExample)
+    ("star-arden.svg", starArdenExample),
+    ("knot-braid3.svg", knotBraid3Example),
+    ("knot-circle.svg", knotCircleExample),
+    ("knot-trace.svg", knotTraceExample),
+    ("knot-tangle.svg", knotTangleExample)
   ]
 
 -- | Write every example SVG into the given directory.
