@@ -11,7 +11,7 @@ packages:
   ../formatn/formatn.cabal
   ../harpie/harpie.cabal
   ../harpie-numhask/harpie-numhask.cabal
-  ../mealy/mealy.cabal
+  ../process-stats/process-stats.cabal
   ../../other/ad-delcont/ad-delcont.cabal
 
 write-ghc-environment-files: always
