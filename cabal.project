@@ -5,6 +5,7 @@ packages:
   ../circuits-ad
   ../circuits-parser
   ../chart-svg
+  ../markup-parse/markup-parse.cabal
   ../numhask/numhask.cabal
   ../numhask-diff/numhask-diff.cabal
   ../numhask-space/numhask-space.cabal
@@ -12,15 +13,8 @@ packages:
   ../harpie/harpie.cabal
   ../harpie-numhask/harpie-numhask.cabal
   ../process-stats/process-stats.cabal
-  ../../other/ad-delcont/ad-delcont.cabal
 
 write-ghc-environment-files: always
-
-allow-newer:
-  ad-delcont:base
-
-package ad-delcont
-  tests: False
 
 package recursion-schemes
   flags: -template-haskell
