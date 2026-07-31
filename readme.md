@@ -1,6 +1,6 @@
 # strings-svg
 
-Render compact-closed string diagrams from `circuits-poly` as SVG via `chart-svg`.
+Render compact-closed string diagrams from `string-diagrams` as SVG via `chart-svg`.
 
 ```haskell
 import Circuit.Poly.StringDiagram (skeleton, wire, boxLabelled, thenD)
