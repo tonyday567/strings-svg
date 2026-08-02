@@ -274,6 +274,31 @@ knotTangleExample =
         (SBeside SBend SSwap)
 
 --------------------------------------------------------------------------------
+-- 12. Copy–merge round trip
+--------------------------------------------------------------------------------
+
+-- | A copy spider followed by a merge spider: both dots visible, the two
+-- fanned wires meeting port-to-port.
+copyMergeExample :: ChartOptions
+copyMergeExample =
+  renderLayout $
+    layoutSDiagram (SThenD (SSpider 1 2) (SSpider 2 1))
+
+--------------------------------------------------------------------------------
+-- 13. Multi-port boxes
+--------------------------------------------------------------------------------
+
+-- | Two-port boxes chained port-to-port, tensored with a plain wire whose
+-- stretch clears the box bodies.
+multiPortBoxExample :: ChartOptions
+multiPortBoxExample =
+  renderLayout $
+    layoutSDiagram $
+      SBeside
+        (SThenD (SBox "f" 2 2) (SBox "g" 2 2))
+        SWire
+
+--------------------------------------------------------------------------------
 -- gallery
 --------------------------------------------------------------------------------
 
@@ -290,7 +315,9 @@ allExamples =
     ("knot-braid3.svg", knotBraid3Example),
     ("knot-circle.svg", knotCircleExample),
     ("knot-trace.svg", knotTraceExample),
-    ("knot-tangle.svg", knotTangleExample)
+    ("knot-tangle.svg", knotTangleExample),
+    ("copy-merge.svg", copyMergeExample),
+    ("multi-port-box.svg", multiPortBoxExample)
   ]
 
 -- | Write every example SVG into the given directory.

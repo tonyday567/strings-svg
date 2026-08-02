@@ -8,6 +8,13 @@
 -- ('SBeside').  That matches the left/right port model and the wall-chart
 -- schematics — not the wording slip in the requirements bullet that had
 -- composition stacking vertically.
+--
+-- Every primitive emits its boundary ports on a uniform vertical grid
+-- with 'portPitch' spacing, so 'thenL' aligns whole port lists pairwise
+-- and 'besideL' concatenates port lists slot by slot.  A port-count
+-- mismatch in 'thenL' is a wiring error: the connection is truncated to
+-- the common prefix and each unmatched port is marked with a dangling
+-- stub and dot, so the error is visible rather than silent.
 module Strings.Svg.Layout
   ( Layout (..),
     layoutSDiagram,
@@ -18,6 +25,7 @@ module Strings.Svg.Layout
     countLines,
     countRects,
     countPaths,
+    countGlyphs,
     unitW,
     boxH,
     composeGap,
@@ -91,8 +99,9 @@ layoutSDiagram = go 0
     go :: Int -> SDiagram -> Layout
     go n = \case
       SWire -> wireL
-      SBox lbl -> boxL n lbl
-      SPrismBox -> boxL n "prism"
+      SBox lbl m o -> boxL n lbl m o
+      SSpider m o -> spiderL m o
+      SPrismBox -> boxL n "prism" 1 1
       SBeside a b -> besideL (go n a) (go (n + boxCount a) b)
       SThenD a b -> thenL (go n a) (go (n + boxCount a) b)
       SBend -> cupL
@@ -108,7 +117,7 @@ layoutSDiagram = go 0
 
 boxCount :: SDiagram -> Int
 boxCount = \case
-  SBox _ -> 1
+  SBox _ _ _ -> 1
   SPrismBox -> 1
   SBeside a b -> boxCount a + boxCount b
   SThenD a b -> boxCount a + boxCount b
@@ -162,25 +171,94 @@ portYs k
       let half = fromIntegral (k - 1) * portPitch / 2
        in [Point 0 (half - fromIntegral i * portPitch) | i <- [0 .. k - 1]]
 
-boxL :: Int -> String -> Layout
-boxL n lbl =
+-- | Box with @m@ input ports on the left edge and @n@ output ports on
+-- the right edge.  Ports sit on the uniform 'portPitch' grid; short
+-- stubs connect each boundary port to a pad dot on the box edge, and the
+-- box height grows to fit @max m n@ ports.  A one-port box keeps the
+-- classic look: a single centred stub per side, no pad dots.
+boxL :: Int -> String -> Int -> Int -> Layout
+boxL c lbl m n =
   Layout
     { picture =
         unnamed
-          [ LineChart (wireStyle wireGrey) [[Point 0 0, Point x0 0]],
-            LineChart (wireStyle wireGrey) [[Point x1 0, Point unitW 0]],
-            RectChart (boxStyle (boxStroke n)) [Rect x0 x1 (-h2) h2],
-            TextChart labelStyle [(pack lbl, Point midX 0)]
-          ],
-      leftPorts = [Point 0 0],
-      rightPorts = [Point unitW 0],
+          ( [ LineChart (wireStyle wireGrey) [[Point 0 y, Point x0 y]]
+            | y <- inYs
+            ]
+              ++ [ LineChart (wireStyle wireGrey) [[Point x1 y, Point unitW y]]
+                 | y <- outYs
+                 ]
+              ++ [ RectChart (boxStyle (boxStroke c)) [Rect x0 x1 (-h2) h2],
+                   TextChart labelStyle [(pack lbl, Point midX 0)]
+                 ]
+              ++ pads
+          ),
+      leftPorts = [Point 0 y | y <- inYs],
+      rightPorts = [Point unitW y | y <- outYs],
       bounds = Rect 0 unitW (-h2 - 0.05) (h2 + 0.05)
     }
   where
-    h2 = boxH / 2
+    inYs = [y | Point _ y <- portYs (max 0 m)]
+    outYs = [y | Point _ y <- portYs (max 0 n)]
+    padHalf = maximum (0 : [max y (-y) | y <- inYs ++ outYs])
+    h2 = max (boxH / 2) (padHalf + padMargin)
+    padMargin = 0.18
     x0 = 0.18
     x1 = unitW - 0.18
     midX = (x0 + x1) / 2
+    pads
+      | max m n > 1 =
+          [ GlyphChart
+              (dotStyle 0.06 (boxStroke c))
+              ([Point x0 y | y <- inYs] ++ [Point x1 y | y <- outYs])
+          ]
+      | otherwise = []
+
+-- | Spider: a junction dot with @m@ input legs converging from the left
+-- and @n@ output legs diverging to the right, drawn as smooth cubics
+-- with horizontal tangents.  'SSpider' 1 2 and 'SSpider' 2 1 are the
+-- classic copy\/merge forks; the degenerate arities are terminators —
+-- 'SSpider' 1 0 a stub ending in a dot, 'SSpider' 0 1 a dot opening
+-- into a stub, 'SSpider' 0 0 a bare dot.
+spiderL :: Int -> Int -> Layout
+spiderL m n =
+  Layout
+    { picture =
+        unnamed
+          ( [ PathChart
+                (pathStroke wireGrey 0.035)
+                [StartP p, CubicP (p + Point leg 0) (c - Point leg 0) c]
+            | p <- lefts
+            ]
+              ++ [ PathChart
+                     (pathStroke wireGrey 0.035)
+                     [StartP c, CubicP (c + Point leg 0) (p - Point leg 0) p]
+                 | p <- rights
+                 ]
+              ++ [GlyphChart (dotStyle 0.12 accentBlue) [c]]
+          ),
+      leftPorts = lefts,
+      rightPorts = rights,
+      bounds = Rect 0 unitW (ymin - 0.05) (ymax + 0.05)
+    }
+  where
+    c = Point (unitW / 2) 0
+    leg = 0.18
+    lefts = portYs (max 0 m)
+    rights = (Point unitW 0 +) <$> portYs (max 0 n)
+    ys = [y | Point _ y <- lefts ++ rights]
+    ymin = minimum (0 : ys)
+    ymax = maximum (0 : ys)
+
+-- | Small filled circle style (spider dots, port pads, error markers).
+dotStyle :: Double -> Colour -> Style
+dotStyle s c =
+  defaultGlyphStyle
+    & set #glyphShape CircleGlyph
+    & set #size s
+    & set #color c
+    & set #borderColor c
+    & set #borderSize 0.02
+    & set #scaleP NoScaleP
 
 -- | Cup (counit): two inputs, closes on the right.
 cupL :: Layout
@@ -251,10 +329,18 @@ swapL =
 --------------------------------------------------------------------------------
 
 -- | Sequential composition: @a@ then @b@ (left to right).
+--
+-- The whole port list is aligned pairwise: @b@ is shifted so that its
+-- first input port meets @a@'s first output port, and since every
+-- primitive emits ports on the uniform 'portPitch' grid, equal-length
+-- port lists then line up exactly.  A port-count mismatch is a wiring
+-- error; layout stays total by truncating the connection to the common
+-- prefix and marking each unmatched port with a dangling stub and dot
+-- ('danglingPorts'), so the error is visible rather than silent.
 thenL :: Layout -> Layout -> Layout
 thenL a b =
   Layout
-    { picture = group Nothing [picture a, picture b', connectors],
+    { picture = group Nothing [picture a, picture b', connectors, dangling],
       leftPorts = leftPorts a,
       rightPorts = rightPorts b',
       bounds = bounds a <> bounds b' <> connBounds
@@ -264,19 +350,74 @@ thenL a b =
     dy = alignY (rightPorts a) (leftPorts b)
     dx = rx a + composeGap - lx b
     b' = moveLayout (Point dx dy) b
-    connectors = connectPorts (rightPorts a) (leftPorts b')
+    outs = rightPorts a
+    ins = leftPorts b'
+    connectors = connectPorts outs ins
+    dangling =
+      danglingPorts (drop (length ins) outs) 1
+        <> danglingPorts (drop (length outs) ins) (-1)
     connBounds =
-      case rightPorts a <> leftPorts b' of
+      case outs <> ins <> danglingEnds of
         [] -> Rect 0 0 0 0
         (p0 : ps) ->
           foldl
             (<>)
             (let Point x y = p0 in Rect x x y y)
             [let Point x y = p in Rect x x y y | p <- ps]
+    danglingEnds =
+      [p + Point stub 0 | p <- drop (length ins) outs]
+        ++ [p - Point stub 0 | p <- drop (length outs) ins]
+    stub = 0.15
+
+-- | Visible wiring-error markers: a short stub continuing past an
+-- unmatched port, ending in a magenta dot.  The 'Double' is the stub
+-- direction (+1 to the right, -1 to the left).
+danglingPorts :: [Point Double] -> Double -> ChartTree
+danglingPorts ps dir =
+  unnamed
+    ( [ LineChart (wireStyle accentMagenta) [[p, p + Point (dir * stub) 0]]
+      | p <- ps
+      ]
+        ++ [ GlyphChart (dotStyle 0.08 accentMagenta) [p + Point (dir * stub) 0 | p <- ps]
+           | not (null ps)
+           ]
+    )
+  where
+    stub = 0.15
 
 -- | Tensor: @a@ above @b@ (ports concatenated top-then-bottom).
+--
+-- When both sides have boundary ports, each is placed on a shared
+-- vertical slot grid with 'portPitch' spacing: @a@ takes the top slots,
+-- @b@ the next ones, so the concatenated port lists stay in vertical
+-- order at a uniform pitch and downstream composition connects straight.
+-- Each side anchors on its first left port (first right port when it has
+-- no left ports) and moves rigidly, so internal wires stretch with their
+-- diagram and nothing is rerouted across a box body.  Diagrams without
+-- boundary ports fall back to bounding-box stacking with 'tensorGap'.
 besideL :: Layout -> Layout -> Layout
-besideL a b =
+besideL a b
+  | slots a > 0 && slots b > 0 = gridBeside a b
+  | otherwise = boxBeside a b
+
+-- | Slot-grid tensor: both sides share a uniform 'portPitch' grid.
+gridBeside :: Layout -> Layout -> Layout
+gridBeside a b =
+  Layout
+    { picture = group Nothing [picture a', picture b'],
+      leftPorts = leftPorts a' <> leftPorts b',
+      rightPorts = rightPorts a' <> rightPorts b',
+      bounds = bounds a' <> bounds b'
+    }
+  where
+    half = fromIntegral (slots a + slots b - 1) * portPitch / 2
+    slotY i = half - fromIntegral i * portPitch
+    a' = moveLayout (Point (-lx a) (slotY 0 - anchorY a)) a
+    b' = moveLayout (Point (-lx b) (slotY (slots a) - anchorY b)) b
+
+-- | Bounding-box tensor: fallback for port-less diagrams.
+boxBeside :: Layout -> Layout -> Layout
+boxBeside a b =
   Layout
     { picture = group Nothing [picture a', picture b'],
       leftPorts = leftPorts a' <> leftPorts b',
@@ -289,6 +430,19 @@ besideL a b =
     by = -(midY b) - layoutHeight b / 2 - tensorGap / 2
     a' = moveLayout (Point (-lx a) ay) a
     b' = moveLayout (Point (-lx b) by) b
+
+-- | Boundary slot count of a layout: the larger port-list length.
+slots :: Layout -> Int
+slots l = max (length (leftPorts l)) (length (rightPorts l))
+
+-- | Vertical anchor of a layout: its first left port, or its first right
+-- port when it has no left ports.
+anchorY :: Layout -> Double
+anchorY l = case leftPorts l of
+  (Point _ y : _) -> y
+  [] -> case rightPorts l of
+    (Point _ y : _) -> y
+    [] -> 0
 
 turnL :: Layout -> Layout
 turnL lay =
@@ -396,6 +550,13 @@ countPaths = countPred isPath
   where
     isPath (Chart _ (PathData _)) = True
     isPath _ = False
+
+-- | Glyph charts (spider dots, port pads, wiring-error markers).
+countGlyphs :: Layout -> Int
+countGlyphs = countPred isGlyph
+  where
+    isGlyph (Chart _ (GlyphData _)) = True
+    isGlyph _ = False
 
 countPred :: (Chart -> Bool) -> Layout -> Int
 countPred p = length . filter p . foldOf charts' . picture
