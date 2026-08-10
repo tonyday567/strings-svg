@@ -15,9 +15,3 @@ packages:
   ../process-stats/process-stats.cabal
 
 write-ghc-environment-files: always
-
-package recursion-schemes
-  flags: -template-haskell
-
-constraints:
-  circuits >= 0.3
