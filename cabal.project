@@ -2,12 +2,11 @@ packages:
   .
   ../circuits
   ../string-diagrams
-  ../circuits-ad
   ../circuits-parser
   ../chart-svg
   ../markup-parse/markup-parse.cabal
   ../numhask/numhask.cabal
-  ../numhask-diff/numhask-diff.cabal
+  ../circuits-diff/circuits-diff.cabal
   ../numhask-space/numhask-space.cabal
   ../formatn/formatn.cabal
   ../harpie/harpie.cabal
